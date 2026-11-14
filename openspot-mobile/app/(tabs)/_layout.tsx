@@ -3,9 +3,8 @@ import { Tabs, usePathname } from 'expo-router';
 import { Player } from '@/components/Player';
 import { QueueDisplay } from '@/components/QueueDisplay';
 import { useMusicQueue } from '@/hooks/useMusicQueue';
-import { HapticTab } from '@/components/HapticTab';
-import { IconSymbol } from '@/components/ui/IconSymbol';
-import TabBarBackground from '@/components/ui/TabBarBackground';
+import IslandTabBar from '@/components/ui/IslandTabBar';
+import { TAB_BAR_HEIGHT, MINI_PLAYER_BAR_GAP } from '@/constants/layout';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { Track } from '@/types/music';
 import { View, Modal, Text, TouchableOpacity, StyleSheet, Linking, ScrollView, Platform } from 'react-native';
@@ -69,18 +68,6 @@ export default function TabLayout() {
   const pathname = usePathname();
   const { isProviderDisabled } = useApiStatus();
   const { toastMessage, toastType, showToast } = useToast();
-
-  const isIOS = Platform.OS === 'ios';
-  const tabTheme = useMemo(
-    () => ({
-      background: isDark ? '#121212' : '#fffaf2',
-      border: isDark ? '#272727' : '#e4d5c5',
-      active: isDark ? (isIOS ? '#038434' : '#1DB954') : '#167c3a',
-      inactive: isDark ? (isIOS ? '#646464' : '#9a9a9a') : '#7a6251',
-      safeArea: isDark ? '#050505' : '#f5efe6',
-    }),
-    [isDark, isIOS]
-  );
 
   const [updateConfig, setUpdateConfig] = useState<UpdateConfig | null>(null);
   const [showForceUpdate, setShowForceUpdate] = useState(false);
@@ -218,61 +205,32 @@ export default function TabLayout() {
         setPendingAutoPlay,
       }}
     >
-      <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: tabTheme.safeArea }}>
+      <SafeAreaView edges={['left', 'right']} style={{ flex: 1, backgroundColor: isDark ? '#050505' : '#f5efe6' }}>
         <View style={{ flex: 1, position: 'relative' }}>
           {isOffline && !pathname?.includes('/downloads') && <OfflineBanner />}
           <Tabs
-            screenOptions={{
-              tabBarActiveTintColor: tabTheme.active,
-              tabBarInactiveTintColor: tabTheme.inactive,
-              headerShown: false,
-              tabBarButton: HapticTab,
-              tabBarBackground: TabBarBackground,
-              tabBarStyle: {
-                backgroundColor: tabTheme.background,
-                borderTopWidth: 1,
-                borderTopColor: tabTheme.border,
-                // height: insets.bottom,
-              },
-              tabBarLabelStyle: {
-                paddingBottom: 0,
-              },
-            }}
+            tabBar={(props) => <IslandTabBar {...props} />}
+            screenOptions={{ headerShown: false }}
           >
             <Tabs.Screen
               name="index"
-              options={{
-                title: t('tabs.home'),
-                tabBarIcon: ({ color }) => <IconSymbol size={28} name="house.fill" color={color} />,
-              }}
+              options={{ title: t('tabs.home') }}
             />
             <Tabs.Screen
               name="search"
-              options={{
-                title: t('tabs.search'),
-                tabBarIcon: ({ color }) => <IconSymbol size={28} name="magnifyingglass" color={color} />,
-              }}
+              options={{ title: t('tabs.search') }}
             />
             <Tabs.Screen
               name="library"
-              options={{
-                title: t('tabs.library'),
-                tabBarIcon: ({ color }) => <IconSymbol size={28} name="books.vertical.fill" color={color} />,
-              }}
+              options={{ title: t('tabs.library') }}
             />
             <Tabs.Screen
               name="downloads"
-              options={{
-                title: t('tabs.downloads'),
-                tabBarIcon: ({ color }) => <IconSymbol size={28} name="arrow.down.circle.fill" color={color} />,
-              }}
+              options={{ href: null }}
             />
             <Tabs.Screen
               name="settings"
-              options={{
-                title: t('settings.settings'),
-                tabBarIcon: ({ color }) => <IconSymbol size={28} name="gearshape.fill" color={color} />,
-              }}
+              options={{ title: t('settings.settings') }}
             />
             <Tabs.Screen
               name="media/[type]/[id]"
@@ -296,7 +254,7 @@ export default function TabLayout() {
                 position: 'absolute',
                 left: 0,
                 right: 0,
-                bottom: 50 + insets.bottom,
+                bottom: TAB_BAR_HEIGHT + MINI_PLAYER_BAR_GAP + insets.bottom,
                 zIndex: 100,
               }}
             >
