@@ -148,7 +148,9 @@
     "liked_songs": "我喜歡的音樂",
     "downloaded": "已下載",
     "playlists": "我的播放清單",
-    "recently_played": "最近播放"
+    "recently_played": "最近播放",
+    "downloads_title": "下載",
+    "downloads_subtitle": "{{count}} 首歌曲 · 可離線播放"
   },
   "downloads": {
     "downloaded_songs": "已下載的歌曲",

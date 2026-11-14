@@ -149,7 +149,9 @@
     "downloaded": "Descargadas",
     "playlists": "Mis listas",
     "recently_played": "Reproducidas recientemente",
-    "saved": "Guardados"
+    "saved": "Guardados",
+    "downloads_title": "Descargas",
+    "downloads_subtitle": "{{count}} canciones · disponibles sin conexión"
   },
   "downloads": {
     "downloaded_songs": "Canciones descargadas",

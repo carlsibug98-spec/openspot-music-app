@@ -149,7 +149,9 @@
     "downloaded": "डाउनलोड किए गए",
     "playlists": "मेरी प्लेलिस्ट",
     "recently_played": "हाल ही में चलाए गए",
-    "saved": "सेव किए गए"
+    "saved": "सेव किए गए",
+    "downloads_title": "डाउनलोड",
+    "downloads_subtitle": "{{count}} गाने · ऑफ़लाइन उपलब्ध"
   },
   "downloads": {
     "downloaded_songs": "डाउनलोड किए गए गाने",

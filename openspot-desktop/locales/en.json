@@ -149,7 +149,9 @@
     "downloaded": "Downloaded",
     "playlists": "My Playlists",
     "recently_played": "Recently Played",
-    "saved": "Saved"
+    "saved": "Saved",
+    "downloads_title": "Downloads",
+    "downloads_subtitle": "{{count}} songs · available offline"
   },
   "downloads": {
     "downloaded_songs": "Downloaded Songs",

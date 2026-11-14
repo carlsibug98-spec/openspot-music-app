@@ -149,7 +149,9 @@
     "downloaded": "İndirilenler",
     "playlists": "Çalma Listelerim",
     "recently_played": "Son Dinlenenler",
-    "saved": "Kaydedilenler"
+    "saved": "Kaydedilenler",
+    "downloads_title": "İndirilenler",
+    "downloads_subtitle": "{{count}} şarkı · çevrimdışı kullanılabilir"
   },
   "downloads": {
     "downloaded_songs": "İndirilen Şarkılar",

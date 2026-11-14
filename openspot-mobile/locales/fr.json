@@ -149,7 +149,9 @@
     "downloaded": "Téléchargées",
     "playlists": "Mes playlists",
     "recently_played": "Récemment écoutés",
-    "saved": "Enregistrés"
+    "saved": "Enregistrés",
+    "downloads_title": "Téléchargements",
+    "downloads_subtitle": "{{count}} titres · disponibles hors ligne"
   },
   "downloads": {
     "downloaded_songs": "Chansons téléchargées",

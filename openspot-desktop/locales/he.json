@@ -149,7 +149,9 @@
     "downloaded": "הורד",
     "playlists": "הפלייליסטים שלי",
     "recently_played": "הושמע לאחרונה",
-    "saved": "שמורים"
+    "saved": "שמורים",
+    "downloads_title": "הורדות",
+    "downloads_subtitle": "{{count}} שירים · זמינים במצב לא מקוון"
   },
   "downloads": {
     "downloaded_songs": "שירים שהורדו",

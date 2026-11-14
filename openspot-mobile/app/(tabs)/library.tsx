@@ -6,6 +6,8 @@ import { PlaylistCard } from '@/components/PlaylistCard';
 import { useLikedSongs } from '@/hooks/useLikedSongs';
 import { MusicPlayerContext } from './_layout';
 import { Ionicons } from '@expo/vector-icons';
+import { Colors } from '@/constants/Colors';
+import { DownloadTabIcon } from '@/components/TabIcons';
 import { PlaylistStorage, Playlist } from '@/lib/playlist-storage';
 import { MusicAPI } from '@/lib/music-api';
 import { useFocusEffect } from 'expo-router';
@@ -47,6 +49,7 @@ export default function LibraryScreen() {
   const [importStatus, setImportStatus] = useState<'idle' | 'fetching' | 'resolving' | 'done' | 'error'>('idle');
   const [importProgress, setImportProgress] = useState({ current: 0, total: 0 });
   const [playlistCovers, setPlaylistCovers] = useState<Record<string, string>>({});
+  const [downloadCount, setDownloadCount] = useState(0);
 
   const fetchSavedMedia = useCallback(async () => {
     const allKeys = await AsyncStorage.getAllKeys();
@@ -58,6 +61,12 @@ export default function LibraryScreen() {
       })
     );
     setSavedMedia(savedItems.filter(Boolean));
+  }, []);
+
+  const fetchDownloadCount = useCallback(async () => {
+    const pls = await PlaylistStorage.getPlaylists();
+    const offline = pls.find(pl => pl.name === 'offline');
+    setDownloadCount(offline ? offline.trackIds.length : 0);
   }, []);
 
   const handleRemoveSavedMedia = async (key: string) => {
@@ -103,7 +112,8 @@ export default function LibraryScreen() {
     React.useCallback(() => {
       fetchPlaylists();
       fetchSavedMedia();
-    }, [fetchPlaylists, fetchSavedMedia])
+      fetchDownloadCount();
+    }, [fetchPlaylists, fetchSavedMedia, fetchDownloadCount])
   );
 
   const handlePlaylistPress = async (playlist: Playlist) => {
@@ -290,6 +300,24 @@ export default function LibraryScreen() {
       ) : !selectedPlaylist ? (
         <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
           <Text style={[styles.sectionTitle, { color: theme.textPrimary }]}>{t('components.your_library')}</Text>
+          <TouchableOpacity
+            style={[styles.downloadsCard, { backgroundColor: theme.surface, borderColor: theme.border }]}
+            activeOpacity={0.8}
+            onPress={() => router.push('/downloads')}
+          >
+            <View style={[styles.downloadsCardIcon, { backgroundColor: Colors.theme.island.pillBg[isDark ? 'dark' : 'light'] }]}>
+              <DownloadTabIcon color={Colors.theme.island.accent[isDark ? 'dark' : 'light']} size={22} />
+            </View>
+            <View style={styles.downloadsCardText}>
+              <Text style={[styles.downloadsCardTitle, { color: theme.textPrimary }]} numberOfLines={1}>
+                {t('library.downloads_title')}
+              </Text>
+              <Text style={[styles.downloadsCardSubtitle, { color: theme.textSecondary }]} numberOfLines={1}>
+                {t('library.downloads_subtitle', { count: downloadCount })}
+              </Text>
+            </View>
+            <Ionicons name="chevron-forward" size={20} color={theme.textSecondary} />
+          </TouchableOpacity>
           <PlaylistCard
             playlist={{
               name: t('library.liked_songs'),
@@ -545,6 +573,35 @@ const styles = StyleSheet.create({
   scrollContent: {
     padding: 16,
     paddingBottom: 60,
+  },
+  downloadsCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 12,
+    minHeight: 44,
+    paddingVertical: 12,
+    paddingHorizontal: 14,
+    borderRadius: 14,
+    borderWidth: 1,
+    marginBottom: 18,
+  },
+  downloadsCardIcon: {
+    width: 44,
+    height: 44,
+    borderRadius: 12,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  downloadsCardText: {
+    flex: 1,
+    gap: 2,
+  },
+  downloadsCardTitle: {
+    fontSize: 15,
+    fontWeight: '700',
+  },
+  downloadsCardSubtitle: {
+    fontSize: 12,
   },
   sectionTitle: {
     color: '#fff',

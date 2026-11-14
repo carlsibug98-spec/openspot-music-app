@@ -149,7 +149,9 @@
     "downloaded": "Скачано",
     "playlists": "Мои плейлисты",
     "recently_played": "Недавно прослушано",
-    "saved": "Сохраненные"
+    "saved": "Сохраненные",
+    "downloads_title": "Загрузки",
+    "downloads_subtitle": "{{count}} треков · доступны офлайн"
   },
   "downloads": {
     "downloaded_songs": "Скачанные треки",
