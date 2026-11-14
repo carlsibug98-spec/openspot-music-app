@@ -1,4 +1,4 @@
-# Navigator Redesign — Design Doc
+# UI Refresh — Design Doc (Navigator + Now Playing)
 
 Date: 2026-11-14
 Status: Draft for approval
@@ -76,7 +76,70 @@ tabs are icons only. The user also chose to **fold Downloads into Library**
   (top of "Your music" section, matching mockup).
 - Final tint values if contrast checks demand tweaks (within the chosen hue).
 
-## Risks
+---
+
+# Part 2 — Now Playing screen (Immersive Art v2)
+
+Approved via mockup review: direction **A · Immersive Art**, revised with the
+user's three changes (v2 confirmed in terminal).
+
+## Goals
+
+1. **Artwork-bleed background**: the screen's background is tinted by the album
+   art (radial gradient rising from the cover, darkening to near-black at the
+   bottom). Replaces the current blurred-image + blur-view stack where it's
+   cheaper to do so.
+   - Constraint: React Native can't sample remote image pixels without a native
+     module (none installed). V1 implementation uses **deterministic gradient
+     pairs** keyed by track id/art hash so every track gets a stable, matching
+     mood gradient. True pixel extraction (e.g., Skia) is a future upgrade.
+2. **Header row**: close chevron (left) · `PLAYING FROM <context>` eyebrow text
+   (center, where context = playlist/region name when known) · **3-dot overflow
+   menu** (right).
+3. **Cover**: large rounded artwork with layered shadow, centered.
+4. **Title block**: title + artist left-aligned (artist remains tappable → artist
+   page). Right side: **download toggle, then heart** (heart keeps its existing
+   pop animation).
+5. **Transport row**: shuffle · previous · **white play/pause circle (black
+   icon)** · next · repeat (existing Off/Track/Queue modes preserved). The white
+   button is a deliberate inversion on this screen only.
+6. **Secondary row**: **queue toggle sits under the repeat button** (right-aligned,
+   quiet gray).
+7. **3-dot menu** opens a bottom sheet with: Add to playlist (opens existing
+   modal) · Go to album (new → existing `media/[type]/[id]` pages) · Go to
+   artist (existing pattern) · Share song (expo-sharing, already a dependency).
+   New strings added to i18n for all 10 locales.
+
+## Decided details
+
+- Expand interaction: tapping the mini player opens the screen with a spring
+  slide-up; the cover scales/translates from the mini-player thumbnail position
+  as an *approximated* morph (RN has no native shared-element transitions —
+  accepted approximation).
+- Progress bar: thin white line + elapsed/remaining times (dark mode); green in
+  light mode.
+- All current features preserved: like, shuffle, repeat, seek, queue sheet,
+  add-to-playlist modal, tablet/landscape responsive layouts, rotating-cover
+  setting (kept, applied to the new cover).
+- **Builder guidance (user-requested)**: implement using the `impeccable` skill
+  and the Emil Kowalski design-engineering guidance (`emil-design-eng`) —
+  spacing/typography discipline, restrained motion, correct easing and
+  interruption behavior.
+
+## Non-goals (Part 2)
+
+- Queue sheet and playlist modal internals stay as-is (restyle only where the
+  shared theme touches them).
+- No lyrics view, no new playback features.
+
+## Part 2 risks
+
+- Gradient pairs must maintain text contrast for both light/dark status bars —
+  verify with the light theme too.
+- Desktop resizable window: confirm the bleed background and cover sizing hold
+  at the 768px tablet breakpoint and in landscape.
+
+## Risks (Part 1 — navigator)
 
 - Bar height change shifts mini player & queue sheet positioning — verify all three
   surfaces stack correctly in both orientations (desktop is resizable; tablet
