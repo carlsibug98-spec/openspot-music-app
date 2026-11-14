@@ -27,6 +27,8 @@ import { Track } from '../types/music';
 import { useLikedSongs } from '../hooks/useLikedSongs';
 import { PlaylistStorage, Playlist } from '@/lib/playlist-storage';
 import { DownloadButton } from './DownloadButton';
+import { Colors } from '@/constants/Colors';
+import { gradientPairFor } from '../lib/now-playing-theme';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useTranslation } from 'react-i18next';
 import TrackPlayer, { RepeatMode } from 'react-native-track-player';
@@ -116,12 +118,12 @@ export function FullScreenPlayer({
       glassBorder: isDark ? 'rgba(255,255,255,0.12)' : 'rgba(0,0,0,0.15)',
       textPrimary: isDark ? '#ffffff' : '#1e1e2a',
       textSecondary: isDark ? 'rgba(255,255,255,0.65)' : 'rgba(0,0,0,0.7)',
-      accent: '#1DB954',
+      accent: Colors.theme.island.accent.dark,
       accentGlow: isDark ? 'rgba(29,185,84,0.3)' : 'rgba(29,185,84,0.15)',
       track: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.12)',
       icon: isDark ? '#ffffff' : '#1e1e2a',
       shadow: isDark ? 'rgba(0,0,0,0.6)' : 'rgba(0,0,0,0.1)',
-      danger: '#FF3B30',
+      danger: Colors.theme.danger[isDark ? 'dark' : 'light'],
     }),
     [isDark]
   );
@@ -338,13 +340,14 @@ export function FullScreenPlayer({
   }, [onQueueToggle]);
 
   const handleArtistPress = useCallback(() => {
+    if (!track) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     onClose();
     router.push({
       pathname: '/search',
       params: { q: track.artist, type: 'artist' }
     });
-  }, [router, track?.artist, onClose]);
+  }, [router, track, onClose]);
 
   const handleSliderStart = useCallback(() => {
     setIsSeeking(true);
@@ -569,7 +572,7 @@ export function FullScreenPlayer({
       <GestureHandlerRootView style={{ flex: 1 }}>
         <SafeAreaView style={[styles.container, { backgroundColor: theme.base }]}>
           <StatusBar
-            barStyle={isDark ? 'light-content' : 'dark-content'}
+            barStyle="light-content"
             backgroundColor="transparent"
             translucent
           />
@@ -577,35 +580,35 @@ export function FullScreenPlayer({
           {Toast}
 
           <View style={styles.backgroundContainer}>
-            <Image
-              source={{ uri: (track as any).offlineThumbUri || track.images.large }}
-              style={styles.backgroundImage}
-              contentFit="cover"
-            />
-            <BlurView intensity={100} tint={isDark ? 'dark' : 'light'} style={styles.blurOverlay} />
             <LinearGradient
-              colors={
-                isDark
-                  ? ['rgba(0,0,0,0.4)', 'rgba(0,0,0,0.7)', 'rgba(0,0,0,0.95)']
-                  : ['rgba(245,239,230,0.3)', 'rgba(245,239,230,0.6)', '#fdf5ed']
-              }
+              colors={gradientPairFor(track.id).colors}
               style={styles.gradient}
             />
           </View>
 
           <Animated.View style={[styles.mainContent, { opacity: fadeAnim }]}>
-            {/* Header */}
+            {/* Header: chevron · eyebrow · 3-dot (menu wired in the overflow-menu task) */}
             <View style={styles.header}>
               <TouchableOpacity
                 onPress={handleClose}
-                style={[styles.headerButton, { backgroundColor: theme.glass }]}
+                style={styles.headerButton}
+                accessibilityRole="button"
+                accessibilityLabel={t('components.back') || 'Back'}
               >
-                <Ionicons name="chevron-down" size={24} color={theme.icon} />
+                <View style={styles.headerButtonCircle}>
+                  <Ionicons name="chevron-down" size={22} color="rgba(255,255,255,0.9)" />
+                </View>
               </TouchableOpacity>
-              <Text style={[styles.headerTitle, { color: theme.textPrimary }]}>
+              <Text style={styles.headerEyebrow} numberOfLines={1}>
                 {t('player.now_playing') || 'Now Playing'}
               </Text>
-              <View style={styles.headerButtonSpacer} />
+              <TouchableOpacity
+                style={styles.headerButton}
+                accessibilityRole="button"
+                accessibilityLabel="More options"
+              >
+                <Ionicons name="ellipsis-horizontal" size={20} color="rgba(255,255,255,0.85)" />
+              </TouchableOpacity>
             </View>
 
             {/* --- FIX 3: Landscape layout — explicit sizing so artwork & slider are always visible --- */}
@@ -650,30 +653,49 @@ export function FullScreenPlayer({
                 styles.rightPanel,
                 isLandscape && styles.rightPanelLandscape,
               ]}>
-                {/* Track info */}
+                {/* Track info: left-aligned title/artist; download + heart right (spec Part 2) */}
                 <View style={[styles.trackInfo, isLandscape && styles.trackInfoLandscape]}>
-                  <Text
-                    style={[
-                      styles.trackTitle,
-                      isLandscape && styles.trackTitleLandscape,
-                      { color: theme.textPrimary },
-                    ]}
-                    numberOfLines={1}
-                  >
-                    {decodeHtmlEntities(track.title)}
-                  </Text>
-                  <TouchableOpacity onPress={handleArtistPress}>
+                  <View style={styles.trackInfoText}>
                     <Text
                       style={[
-                        styles.trackArtist,
-                        isLandscape && styles.trackArtistLandscape,
-                        { color: theme.textSecondary },
+                        styles.trackTitle,
+                        isLandscape && styles.trackTitleLandscape,
                       ]}
-                      numberOfLines={2}
+                      numberOfLines={1}
                     >
-                      {decodeHtmlEntities(track.artist)}
+                      {decodeHtmlEntities(track.title)}
                     </Text>
-                  </TouchableOpacity>
+                    <TouchableOpacity onPress={handleArtistPress}>
+                      <Text
+                        style={[
+                          styles.trackArtist,
+                          isLandscape && styles.trackArtistLandscape,
+                          { color: theme.accent },
+                        ]}
+                        numberOfLines={1}
+                      >
+                        {decodeHtmlEntities(track.artist)}
+                      </Text>
+                    </TouchableOpacity>
+                  </View>
+                  <View style={styles.trackInfoActions}>
+                    <DownloadButton
+                      track={track}
+                      iconColor="rgba(255,255,255,0.75)"
+                      accentColor={theme.accent}
+                      showNotification={showToast}
+                      iconSize={21}
+                    />
+                    <Animated.View style={{ transform: [{ scale: likeScaleAnim }] }}>
+                      <TouchableOpacity onPress={handleLike} style={styles.trackHeartButton}>
+                        <Ionicons
+                          name={isLiked(track.id) ? 'heart' : 'heart-outline'}
+                          size={22}
+                          color={isLiked(track.id) ? theme.accent : '#ffffff'}
+                        />
+                      </TouchableOpacity>
+                    </Animated.View>
+                  </View>
                 </View>
 
                 {/* Seek bar */}
@@ -737,7 +759,7 @@ export function FullScreenPlayer({
                     style={[
                       styles.playButton,
                       isLandscape && styles.playButtonLandscape,
-                      { backgroundColor: theme.accent },
+                      { backgroundColor: theme.accent, shadowColor: theme.accent },
                     ]}
                   >
                     <Ionicons name={isPlaying ? 'pause' : 'play'} size={isLandscape ? 30 : 32} color="#fff" />
@@ -753,23 +775,6 @@ export function FullScreenPlayer({
                   >
                     <Ionicons name="play-skip-forward" size={isLandscape ? 26 : 28} color={theme.icon} />
                   </TouchableOpacity>
-
-                  <Animated.View style={{ transform: [{ scale: likeScaleAnim }] }}>
-                    <TouchableOpacity
-                      onPress={handleLike}
-                      style={[
-                        styles.controlButton,
-                        isLandscape && styles.controlButtonLandscape,
-                        { backgroundColor: theme.glass },
-                      ]}
-                    >
-                      <Ionicons
-                        name={isLiked(track.id) ? 'heart' : 'heart-outline'}
-                        size={isLandscape ? 22 : 24}
-                        color={isLiked(track.id) ? theme.accent : theme.icon}
-                      />
-                    </TouchableOpacity>
-                  </Animated.View>
                 </View>
 
                 {/* --- FIX 2: Bottom buttons — always evenly spaced row, no overflow --- */}
@@ -788,12 +793,12 @@ export function FullScreenPlayer({
                         color={repeatMode !== RepeatMode.Off ? theme.accent : theme.textSecondary}
                       />
                       {repeatMode === RepeatMode.Track && (
-                        <View style={styles.repeatBadgeMini}>
+                        <View style={[styles.repeatBadgeMini, { backgroundColor: theme.accent }]}>
                           <Text style={styles.repeatBadgeMiniText}>1</Text>
                         </View>
                       )}
                       {repeatMode === RepeatMode.Queue && (
-                        <View style={styles.repeatBadgeMini}>
+                        <View style={[styles.repeatBadgeMini, { backgroundColor: theme.accent }]}>
                           <Text style={styles.repeatBadgeMiniText}>∞</Text>
                         </View>
                       )}
@@ -812,17 +817,6 @@ export function FullScreenPlayer({
                       {t('components.add') || 'Add'}
                     </Text>
                   </TouchableOpacity>
-
-                  <DownloadButton
-                    track={track}
-                    style={styles.miniButtonWithText}
-                    iconColor={theme.textSecondary}
-                    accentColor={theme.accent}
-                    showNotification={showToast}
-                    iconSize={24}
-                    showText={true}
-                    textColor={theme.textSecondary}
-                  />
 
                   <TouchableOpacity
                     onPress={handleQueueToggle}
@@ -848,8 +842,6 @@ export function FullScreenPlayer({
 const styles = StyleSheet.create({
   container: { flex: 1 },
   backgroundContainer: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
-  backgroundImage: { width: '100%', height: '100%' },
-  blurOverlay: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   gradient: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   mainContent: { flex: 1 },
 
@@ -857,20 +849,35 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: 20,
-    paddingTop: 16,
-    paddingBottom: 10,
+    paddingHorizontal: 16,
+    paddingTop: 12,
+    paddingBottom: 6,
     zIndex: 2,
   },
   headerButton: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 44,
+    height: 44,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  headerButtonSpacer: { width: 40, height: 40 },
-  headerTitle: { fontSize: 16, fontWeight: '600', letterSpacing: 0.5 },
+  headerButtonCircle: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.14)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  headerEyebrow: {
+    flex: 1,
+    textAlign: 'center',
+    fontSize: 10,
+    fontWeight: '700',
+    letterSpacing: 1.2,
+    textTransform: 'uppercase',
+    color: 'rgba(255,255,255,0.55)',
+    marginHorizontal: 4,
+  },
 
   contentPortrait: {
     flex: 1,
@@ -934,7 +941,10 @@ const styles = StyleSheet.create({
   },
 
   trackInfo: {
+    flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
     marginBottom: 20,
     paddingHorizontal: 12,
     width: '100%',
@@ -943,24 +953,39 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     paddingHorizontal: 4,
   },
+  trackInfoText: {
+    flex: 1,
+    minWidth: 0,
+  },
+  trackInfoActions: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: 6,
+  },
+  trackHeartButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   trackTitle: {
     fontSize: 22,
     fontWeight: '800',
-    textAlign: 'center',
-    marginBottom: 6,
-    letterSpacing: -0.3,
-    lineHeight: 30,
-    minHeight: 30,
+    marginBottom: 4,
+    letterSpacing: -0.4,
+    lineHeight: 28,
+    minHeight: 28,
+    color: '#ffffff',
   },
   trackTitleLandscape: { fontSize: 18, lineHeight: 24, minHeight: 24 },
   trackArtist: {
-    fontSize: 16,
-    textAlign: 'center',
-    opacity: 0.8,
-    lineHeight: 22,
-    minHeight: 22,
+    fontSize: 12,
+    fontWeight: '600',
+    lineHeight: 16,
+    minHeight: 16,
+    alignSelf: 'flex-start',
   },
-  trackArtistLandscape: { fontSize: 14, lineHeight: 18, minHeight: 18 },
+  trackArtistLandscape: { fontSize: 12, lineHeight: 16, minHeight: 16 },
 
   progressContainer: { marginBottom: 20, width: '100%', paddingHorizontal: 8 },
   progressContainerLandscape: { marginBottom: 10, paddingHorizontal: 4 },
@@ -991,7 +1016,6 @@ const styles = StyleSheet.create({
     borderRadius: 34,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowColor: '#1DB954',
     shadowOffset: { width: 0, height: 6 },
     shadowOpacity: 0.4,
     shadowRadius: 12,
@@ -1030,7 +1054,6 @@ const styles = StyleSheet.create({
     position: 'absolute',
     top: -2,
     right: -6,
-    backgroundColor: '#1DB954',
     borderRadius: 6,
     minWidth: 14,
     height: 14,
