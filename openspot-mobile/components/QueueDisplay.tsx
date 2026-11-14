@@ -1,18 +1,19 @@
-import React, { useMemo, useCallback, useRef, useEffect } from 'react';
+import React, { useMemo, useCallback, useRef, useEffect, useState } from 'react';
 import {
   View,
   Text,
-  FlatList,
   TouchableOpacity,
   StyleSheet,
   Modal,
-  FlatList as FlatListType,
   useWindowDimensions,
 } from 'react-native';
 import { Image } from 'expo-image';
 import { Ionicons } from '@expo/vector-icons';
 import { LinearGradient } from 'expo-linear-gradient';
 import { BlurView } from 'expo-blur';
+import { GestureHandlerRootView, FlatList as GestureFlatList } from 'react-native-gesture-handler';
+import DraggableFlatList, { RenderItemParams, DragEndParams } from 'react-native-draggable-flatlist';
+import * as Haptics from 'expo-haptics';
 
 import { Track } from '@/types/music';
 import { MusicAPI } from '@/lib/music-api';
@@ -49,7 +50,11 @@ export function QueueDisplay({
   const { t } = useTranslation();
   const colorScheme = useColorScheme();
   const isDark = colorScheme !== 'light';
-  const flatListRef = useRef<FlatListType<Track>>(null);
+  const flatListRef = useRef<GestureFlatList<Track>>(null);
+  const [activeIndex, setActiveIndex] = useState<number | null>(null);
+  // Stable per-entry keys so reordering animates instead of remounting rows.
+  const itemKeys = useRef(new WeakMap<Track, string>());
+  const keyCounter = useRef(0);
   const { width: windowWidth, height: windowHeight } = useWindowDimensions();
   const isLandscape = windowWidth > windowHeight;
 
@@ -63,7 +68,6 @@ export function QueueDisplay({
       accent: isDark ? '#1DB954' : '#167c3a',
       track: isDark ? 'rgba(255,255,255,0.2)' : 'rgba(0,0,0,0.15)',
       icon: isDark ? '#ffffff' : '#1a1a1a',
-      disabled: isDark ? '#444' : '#ccc',
     }),
     [isDark]
   );
@@ -81,10 +85,35 @@ export function QueueDisplay({
     }
   }, [isOpen, musicQueue.currentIndex, musicQueue.tracks.length]);
 
+  const handleDragBegin = useCallback((index: number) => {
+    setActiveIndex(index);
+  }, []);
+
+  const keyExtractor = useCallback((item: Track) => {
+    const keys = itemKeys.current;
+    let key = keys.get(item);
+    if (!key) {
+      key = `queue-item-${keyCounter.current++}`;
+      keys.set(item, key);
+    }
+    return key;
+  }, []);
+
+  const handleDragEnd = useCallback(
+    ({ from, to }: DragEndParams<Track>) => {
+      setActiveIndex(null);
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+      musicQueue.moveQueueItem(from, to);
+    },
+    [musicQueue]
+  );
+
   const renderTrackItem = useCallback(
-    ({ item, index }: { item: Track; index: number }) => {
+    ({ item, getIndex, drag, isActive }: RenderItemParams<Track>) => {
+      const index = getIndex() ?? 0;
       const isCurrentTrack = musicQueue.currentIndex === index;
       const isTrackLiked = isLiked(item.id);
+      const isDimmed = activeIndex !== null && !isActive;
 
       return (
         <TouchableOpacity
@@ -92,8 +121,18 @@ export function QueueDisplay({
             styles.trackItem,
             isLandscape && styles.trackItemLandscape,
             isCurrentTrack && [styles.currentTrackItem, { backgroundColor: theme.glass }],
+            isActive && [
+              styles.draggingItem,
+              { backgroundColor: isDark ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)' },
+            ],
+            isDimmed && styles.dimmedItem,
           ]}
           onPress={() => onTrackSelect(item, index)}
+          onLongPress={() => {
+            Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+            drag();
+          }}
+          delayLongPress={200}
         >
           <View style={styles.trackNumber}>
             <Text
@@ -140,30 +179,6 @@ export function QueueDisplay({
           </View>
 
           <View style={styles.trackActions}>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() => musicQueue.moveQueueItem(index, Math.max(0, index - 1))}
-              disabled={index === 0}
-            >
-              <Ionicons
-                name="arrow-up"
-                size={18}
-                color={index === 0 ? theme.disabled : theme.textSecondary}
-              />
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.actionButton}
-              onPress={() =>
-                musicQueue.moveQueueItem(index, Math.min(musicQueue.tracks.length - 1, index + 1))
-              }
-              disabled={index === musicQueue.tracks.length - 1}
-            >
-              <Ionicons
-                name="arrow-down"
-                size={18}
-                color={index === musicQueue.tracks.length - 1 ? theme.disabled : theme.textSecondary}
-              />
-            </TouchableOpacity>
             <TouchableOpacity style={styles.actionButton} onPress={() => toggleLike(item)}>
               <Ionicons
                 name={isTrackLiked ? 'heart' : 'heart-outline'}
@@ -184,7 +199,7 @@ export function QueueDisplay({
         </TouchableOpacity>
       );
     },
-    [theme, musicQueue, isLiked, toggleLike, onTrackSelect, isLandscape]
+    [theme, musicQueue, isLiked, toggleLike, onTrackSelect, isLandscape, activeIndex, isDark]
   );
 
   const renderHeader = () => (
@@ -262,34 +277,39 @@ export function QueueDisplay({
 
   return (
     <Modal visible={isOpen} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
-      <View style={[styles.container, { backgroundColor: theme.base }]}>
-        <BlurView intensity={isDark ? 10 : 0} tint={isDark ? 'dark' : 'light'} style={styles.blurContainer}>
-          {renderHeader()}
-          {renderQueueControls()}
+      <GestureHandlerRootView style={styles.root}>
+        <View style={[styles.container, { backgroundColor: theme.base }]}>
+          <BlurView intensity={isDark ? 10 : 0} tint={isDark ? 'dark' : 'light'} style={styles.blurContainer}>
+            {renderHeader()}
+            {renderQueueControls()}
 
-          {musicQueue.tracks.length === 0 ? (
-            renderEmptyState()
-          ) : (
-            <FlatList
-              ref={flatListRef}
-              data={musicQueue.tracks}
-              renderItem={renderTrackItem}
-              keyExtractor={(item) => item.id.toString()}
-              showsVerticalScrollIndicator={false}
-              contentContainerStyle={[styles.listContainer, isLandscape && styles.listContainerLandscape]}
-              getItemLayout={getItemLayout}
-              removeClippedSubviews={true}
-              maxToRenderPerBatch={10}
-              windowSize={5}
-            />
-          )}
-        </BlurView>
-      </View>
+            {musicQueue.tracks.length === 0 ? (
+              renderEmptyState()
+            ) : (
+              <DraggableFlatList
+                ref={flatListRef}
+                data={musicQueue.tracks}
+                renderItem={renderTrackItem}
+                keyExtractor={keyExtractor}
+                onDragBegin={handleDragBegin}
+                onDragEnd={handleDragEnd}
+                showsVerticalScrollIndicator={false}
+                contentContainerStyle={[styles.listContainer, isLandscape && styles.listContainerLandscape]}
+                getItemLayout={getItemLayout}
+                removeClippedSubviews={true}
+                maxToRenderPerBatch={10}
+                windowSize={5}
+              />
+            )}
+          </BlurView>
+        </View>
+      </GestureHandlerRootView>
     </Modal>
   );
 }
 
 const styles = StyleSheet.create({
+  root: { flex: 1 },
   container: { flex: 1 },
   blurContainer: { flex: 1 },
   header: { paddingTop: 20, paddingBottom: 10 },
@@ -341,6 +361,16 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
   },
   currentTrackItem: {},
+  draggingItem: {
+    transform: [{ scale: 1.02 }],
+    borderRadius: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 8 },
+    shadowOpacity: 0.35,
+    shadowRadius: 16,
+    elevation: 10,
+  },
+  dimmedItem: { opacity: 0.45 },
   trackNumber: { width: 24, alignItems: 'center', marginRight: 12 },
   trackNumberText: { fontSize: 14 },
   albumCover: { width: 40, height: 40, borderRadius: 4, marginRight: 12 },
