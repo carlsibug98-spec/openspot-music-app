@@ -701,7 +701,7 @@ export function FullScreenPlayer({
                 {/* Seek bar */}
                 <View style={[styles.progressContainer, isLandscape && styles.progressContainerLandscape]}>
                   <View style={styles.progressBar}>
-                    <Text style={[styles.timeText, { color: theme.textSecondary }]}>
+                    <Text style={[styles.timeText, { color: 'rgba(255,255,255,0.55)' }]}>
                       {formatTime(displayedPosition)}
                     </Text>
                     <View style={styles.sliderContainer}>
@@ -713,67 +713,84 @@ export function FullScreenPlayer({
                         onValueChange={handleSliderChange}
                         onSlidingStart={handleSliderStart}
                         onSlidingComplete={handleSliderComplete}
-                        minimumTrackTintColor={theme.accent}
-                        maximumTrackTintColor={theme.track}
-                        thumbTintColor={theme.accent}
+                        minimumTrackTintColor="#ffffff"
+                        maximumTrackTintColor="rgba(255,255,255,0.2)"
+                        thumbTintColor="#ffffff"
                         trackHeight={4}
                         thumbSize={20}
                       />
                     </View>
-                    <Text style={[styles.timeText, { color: theme.textSecondary }]}>
+                    <Text style={[styles.timeText, { color: 'rgba(255,255,255,0.55)' }]}>
                       {formatTime(duration)}
                     </Text>
                   </View>
                 </View>
 
-                {/* Playback controls */}
+                {/* Playback controls: shuffle · prev · play · next · repeat */}
                 <View style={[styles.controls, isLandscape && styles.controlsLandscape]}>
                   <TouchableOpacity
                     onPress={handleShufflePress}
-                    style={[
-                      styles.controlButton,
-                      isLandscape && styles.controlButtonLandscape,
-                      { backgroundColor: theme.glass },
-                    ]}
+                    style={styles.controlButton}
+                    accessibilityRole="button"
+                    accessibilityLabel="Shuffle"
                   >
                     <Ionicons
                       name="shuffle"
-                      size={isLandscape ? 22 : 22}
-                      color={musicQueue?.isShuffled ? theme.accent : theme.icon}
+                      size={22}
+                      color={musicQueue?.isShuffled ? theme.accent : 'rgba(255,255,255,0.75)'}
                     />
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     onPress={handlePrevious}
-                    style={[
-                      styles.controlButton,
-                      isLandscape && styles.controlButtonLandscape,
-                      { backgroundColor: theme.glass },
-                    ]}
+                    style={styles.controlButton}
+                    accessibilityRole="button"
+                    accessibilityLabel="Previous"
                   >
-                    <Ionicons name="play-skip-back" size={isLandscape ? 26 : 28} color={theme.icon} />
+                    <Ionicons name="play-skip-back" size={22} color="rgba(255,255,255,0.75)" />
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     onPress={handlePlayPause}
-                    style={[
-                      styles.playButton,
-                      isLandscape && styles.playButtonLandscape,
-                      { backgroundColor: theme.accent, shadowColor: theme.accent },
-                    ]}
+                    style={styles.playButton}
+                    accessibilityRole="button"
+                    accessibilityLabel={isPlaying ? 'Pause' : 'Play'}
                   >
-                    <Ionicons name={isPlaying ? 'pause' : 'play'} size={isLandscape ? 30 : 32} color="#fff" />
+                    <Ionicons name={isPlaying ? 'pause' : 'play'} size={22} color="#000000" />
                   </TouchableOpacity>
 
                   <TouchableOpacity
                     onPress={handleNext}
-                    style={[
-                      styles.controlButton,
-                      isLandscape && styles.controlButtonLandscape,
-                      { backgroundColor: theme.glass },
-                    ]}
+                    style={styles.controlButton}
+                    accessibilityRole="button"
+                    accessibilityLabel="Next"
                   >
-                    <Ionicons name="play-skip-forward" size={isLandscape ? 26 : 28} color={theme.icon} />
+                    <Ionicons name="play-skip-forward" size={22} color="rgba(255,255,255,0.75)" />
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    onPress={handleRepeatToggle}
+                    style={styles.controlButton}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('components.repeat') || 'Repeat'}
+                  >
+                    <Ionicons
+                      name={getRepeatIcon()}
+                      size={22}
+                      color={repeatMode !== RepeatMode.Off ? theme.accent : 'rgba(255,255,255,0.75)'}
+                    />
+                  </TouchableOpacity>
+                </View>
+
+                {/* Secondary row: queue toggle, right-aligned under repeat (spec Part 2) */}
+                <View style={styles.secondaryRow}>
+                  <TouchableOpacity
+                    onPress={handleQueueToggle}
+                    style={styles.secondaryButton}
+                    accessibilityRole="button"
+                    accessibilityLabel={t('components.queue') || 'Queue'}
+                  >
+                    <Ionicons name="list" size={18} color="rgba(255,255,255,0.45)" />
                   </TouchableOpacity>
                 </View>
 
@@ -783,48 +800,12 @@ export function FullScreenPlayer({
                   isLandscape ? styles.bottomControlsLandscape : styles.bottomControlsPortrait,
                 ]}>
                   <TouchableOpacity
-                    onPress={handleRepeatToggle}
-                    style={styles.miniButtonWithText}
-                  >
-                    <View>
-                      <Ionicons
-                        name={getRepeatIcon()}
-                        size={24}
-                        color={repeatMode !== RepeatMode.Off ? theme.accent : theme.textSecondary}
-                      />
-                      {repeatMode === RepeatMode.Track && (
-                        <View style={[styles.repeatBadgeMini, { backgroundColor: theme.accent }]}>
-                          <Text style={styles.repeatBadgeMiniText}>1</Text>
-                        </View>
-                      )}
-                      {repeatMode === RepeatMode.Queue && (
-                        <View style={[styles.repeatBadgeMini, { backgroundColor: theme.accent }]}>
-                          <Text style={styles.repeatBadgeMiniText}>∞</Text>
-                        </View>
-                      )}
-                    </View>
-                    <Text style={[styles.miniButtonText, { color: theme.textSecondary }]}>
-                      {t('components.repeat') || 'Repeat'}
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
                     onPress={openPlaylistModal}
                     style={styles.miniButtonWithText}
                   >
-                    <Ionicons name="add-circle" size={24} color={theme.textSecondary} />
-                    <Text style={[styles.miniButtonText, { color: theme.textSecondary }]}>
+                    <Ionicons name="add-circle" size={24} color="rgba(255,255,255,0.55)" />
+                    <Text style={[styles.miniButtonText, { color: 'rgba(255,255,255,0.55)' }]}>
                       {t('components.add') || 'Add'}
-                    </Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    onPress={handleQueueToggle}
-                    style={styles.miniButtonWithText}
-                  >
-                    <Ionicons name="list" size={24} color={theme.textSecondary} />
-                    <Text style={[styles.miniButtonText, { color: theme.textSecondary }]}>
-                      {t('components.queue') || 'Queue'}
                     </Text>
                   </TouchableOpacity>
                 </View>
@@ -1003,25 +984,40 @@ const styles = StyleSheet.create({
   },
   controlsLandscape: { marginBottom: 8, gap: 10 },
   controlButton: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
+    width: 44,
+    height: 44,
+    borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  controlButtonLandscape: { width: 40, height: 40, borderRadius: 20 },
   playButton: {
-    width: 68,
-    height: 68,
-    borderRadius: 34,
+    width: 58,
+    height: 58,
+    borderRadius: 29,
     alignItems: 'center',
     justifyContent: 'center',
-    shadowOffset: { width: 0, height: 6 },
+    backgroundColor: '#ffffff',
+    shadowColor: '#000000',
+    shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.4,
-    shadowRadius: 12,
+    shadowRadius: 30,
     elevation: 8,
   },
-  playButtonLandscape: { width: 58, height: 58, borderRadius: 29 },
+
+  secondaryRow: {
+    flexDirection: 'row',
+    justifyContent: 'flex-end',
+    alignItems: 'center',
+    width: '100%',
+    paddingHorizontal: 12,
+    marginBottom: 12,
+  },
+  secondaryButton: {
+    width: 44,
+    height: 44,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
 
   bottomControls: {
     flexDirection: 'row',
@@ -1049,19 +1045,6 @@ const styles = StyleSheet.create({
     minWidth: 56,
   },
   miniButtonText: { fontSize: 10, marginTop: 4, fontWeight: '500' },
-
-  repeatBadgeMini: {
-    position: 'absolute',
-    top: -2,
-    right: -6,
-    borderRadius: 6,
-    minWidth: 14,
-    height: 14,
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingHorizontal: 2,
-  },
-  repeatBadgeMiniText: { color: '#fff', fontSize: 8, fontWeight: 'bold' },
 
   modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   modalBox: {
