@@ -45,6 +45,10 @@
   },
   "player": {
     "now_playing": "מתנגן עכשיו",
+    "go_to_album": "לעבור לאלבום",
+    "go_to_artist": "לעבור לאמן",
+    "share_song": "שיתוף שיר",
+    "more_options": "אפשרויות נוספות",
     "play": "נגן",
     "pause": "השהה",
     "next": "הבא",

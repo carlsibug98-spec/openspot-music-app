@@ -45,6 +45,10 @@
   },
   "player": {
     "now_playing": "En cours de lecture",
+    "go_to_album": "Voir l'album",
+    "go_to_artist": "Voir l'artiste",
+    "share_song": "Partager le titre",
+    "more_options": "Plus d'options",
     "play": "Lire",
     "pause": "Pause",
     "next": "Suivant",

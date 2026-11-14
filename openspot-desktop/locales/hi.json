@@ -46,6 +46,10 @@
   },
   "player": {
     "now_playing": "अब चल रहा है",
+    "go_to_album": "एल्बम पर जाएँ",
+    "go_to_artist": "कलाकार पर जाएँ",
+    "share_song": "गाना साझा करें",
+    "more_options": "और विकल्प",
     "play": "चलाएँ",
     "pause": "रोकें",
     "next": "अगला",

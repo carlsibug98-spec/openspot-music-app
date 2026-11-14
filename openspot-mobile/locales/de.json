@@ -45,6 +45,10 @@
   },
   "player": {
     "now_playing": "Jetzt läuft",
+    "go_to_album": "Zum Album",
+    "go_to_artist": "Zum Künstler",
+    "share_song": "Song teilen",
+    "more_options": "Weitere Optionen",
     "play": "Abspielen",
     "pause": "Pause",
     "next": "Nächster",

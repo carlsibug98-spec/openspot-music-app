@@ -46,6 +46,10 @@
   },
   "player": {
     "now_playing": "재생 중",
+    "go_to_album": "앨범으로 이동",
+    "go_to_artist": "아티스트로 이동",
+    "share_song": "곡 공유",
+    "more_options": "더 보기",
     "play": "재생",
     "pause": "일시정지",
     "next": "다음",

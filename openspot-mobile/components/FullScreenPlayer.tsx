@@ -29,6 +29,7 @@ import { PlaylistStorage, Playlist } from '@/lib/playlist-storage';
 import { DownloadButton } from './DownloadButton';
 import { Colors } from '@/constants/Colors';
 import { gradientPairFor } from '../lib/now-playing-theme';
+import { NowPlayingMenu } from './NowPlayingMenu';
 import { useColorScheme } from '@/hooks/useColorScheme';
 import { useTranslation } from 'react-i18next';
 import TrackPlayer, { RepeatMode } from 'react-native-track-player';
@@ -131,6 +132,7 @@ export function FullScreenPlayer({
   const [isSeeking, setIsSeeking] = useState(false);
   const [seekPosition, setSeekPosition] = useState(0);
   const [showAddModal, setShowAddModal] = useState(false);
+  const [menuVisible, setMenuVisible] = useState(false);
   const [playlists, setPlaylists] = useState<Playlist[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [adding, setAdding] = useState(false);
@@ -603,9 +605,13 @@ export function FullScreenPlayer({
                 {t('player.now_playing') || 'Now Playing'}
               </Text>
               <TouchableOpacity
+                onPress={() => {
+                  Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+                  setMenuVisible(true);
+                }}
                 style={styles.headerButton}
                 accessibilityRole="button"
-                accessibilityLabel="More options"
+                accessibilityLabel={t('player.more_options') || 'More options'}
               >
                 <Ionicons name="ellipsis-horizontal" size={20} color="rgba(255,255,255,0.85)" />
               </TouchableOpacity>
@@ -793,27 +799,17 @@ export function FullScreenPlayer({
                     <Ionicons name="list" size={18} color="rgba(255,255,255,0.45)" />
                   </TouchableOpacity>
                 </View>
-
-                {/* --- FIX 2: Bottom buttons — always evenly spaced row, no overflow --- */}
-                <View style={[
-                  styles.bottomControls,
-                  isLandscape ? styles.bottomControlsLandscape : styles.bottomControlsPortrait,
-                ]}>
-                  <TouchableOpacity
-                    onPress={openPlaylistModal}
-                    style={styles.miniButtonWithText}
-                  >
-                    <Ionicons name="add-circle" size={24} color="rgba(255,255,255,0.55)" />
-                    <Text style={[styles.miniButtonText, { color: 'rgba(255,255,255,0.55)' }]}>
-                      {t('components.add') || 'Add'}
-                    </Text>
-                  </TouchableOpacity>
-                </View>
               </View>
             </View>
           </Animated.View>
 
           {PlaylistModal}
+          <NowPlayingMenu
+            visible={menuVisible}
+            onClose={() => setMenuVisible(false)}
+            onAddToPlaylist={openPlaylistModal}
+            track={track}
+          />
         </SafeAreaView>
       </GestureHandlerRootView>
     </Modal>
@@ -1018,33 +1014,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-
-  bottomControls: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-evenly',
-    width: '100%',
-  },
-  bottomControlsPortrait: {
-    paddingHorizontal: 4,
-    paddingBottom: 12,
-    marginTop: 4,
-  },
-  bottomControlsLandscape: {
-    paddingHorizontal: 4,
-    paddingBottom: 4,
-    marginTop: 4,
-  },
-
-  miniButtonWithText: {
-    flexDirection: 'column',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: 6,
-    paddingHorizontal: 8,
-    minWidth: 56,
-  },
-  miniButtonText: { fontSize: 10, marginTop: 4, fontWeight: '500' },
 
   modalOverlay: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   modalBox: {

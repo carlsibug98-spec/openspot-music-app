@@ -45,6 +45,10 @@
   },
   "player": {
     "now_playing": "Şimdi Çalıyor",
+    "go_to_album": "Albüme git",
+    "go_to_artist": "Sanatçıya git",
+    "share_song": "Şarkıyı paylaş",
+    "more_options": "Diğer seçenekler",
     "play": "Oynat",
     "pause": "Duraklat",
     "next": "Sonraki",

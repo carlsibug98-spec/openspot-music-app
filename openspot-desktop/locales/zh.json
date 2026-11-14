@@ -46,6 +46,10 @@
   },
   "player": {
     "now_playing": "正在播放",
+    "go_to_album": "查看专辑",
+    "go_to_artist": "查看歌手",
+    "share_song": "分享歌曲",
+    "more_options": "更多选项",
     "play": "播放",
     "pause": "暂停",
     "next": "下一首",

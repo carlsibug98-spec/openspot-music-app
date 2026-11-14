@@ -45,6 +45,10 @@
   },
   "player": {
     "now_playing": "Now Playing",
+    "go_to_album": "Go to album",
+    "go_to_artist": "Go to artist",
+    "share_song": "Share song",
+    "more_options": "More options",
     "play": "Play",
     "pause": "Pause",
     "next": "Next",
