@@ -36,7 +36,7 @@ import TrackPlayer, { RepeatMode } from 'react-native-track-player';
 
 const ROTATING_COVER_KEY = 'openspot_rotating_cover_v1';
 
-const ANIMATION_DURATION = 500;
+const ANIMATION_DURATION = 240;
 const SUCCESS_TOAST_DURATION = 2000;
 const TABLET_BREAKPOINT = 768;
 
@@ -144,6 +144,14 @@ export function FullScreenPlayer({
   const albumScaleAnim = useRef(new Animated.Value(1)).current;
   const likeScaleAnim = useRef(new Animated.Value(1)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
+  // Task 8: cover entrance — spring scale 0.92→1 + 200ms opacity fade; values are
+  // reset on every open so re-opening mid-animation never sticks.
+  const coverEntranceAnim = useRef(new Animated.Value(0)).current;
+  const coverFadeAnim = useRef(new Animated.Value(0)).current;
+  const coverScale = coverEntranceAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [0.92, 1],
+  });
   const rotateAnim = useRef(new Animated.Value(0)).current;
   const rotationLoop = useRef<Animated.CompositeAnimation | null>(null);
 
@@ -193,6 +201,18 @@ export function FullScreenPlayer({
 
   useEffect(() => {
     if (isOpen) {
+      coverEntranceAnim.setValue(0);
+      Animated.spring(coverEntranceAnim, {
+        toValue: 1,
+        damping: 20,
+        stiffness: 200,
+        useNativeDriver: true,
+      }).start();
+      Animated.timing(coverFadeAnim, {
+        toValue: 1,
+        duration: 200,
+        useNativeDriver: true,
+      }).start();
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: ANIMATION_DURATION,
@@ -209,8 +229,10 @@ export function FullScreenPlayer({
       }).catch(() => {});
     } else {
       fadeAnim.setValue(0);
+      coverEntranceAnim.setValue(0);
+      coverFadeAnim.setValue(0);
     }
-  }, [isOpen, fadeAnim, isPlaying, startRotation, rotationLoop]);
+  }, [isOpen, fadeAnim, coverEntranceAnim, coverFadeAnim, isPlaying, startRotation, rotationLoop]);
 
   useEffect(() => {
     let animation: Animated.CompositeAnimation | null = null;
@@ -632,8 +654,9 @@ export function FullScreenPlayer({
                       padding: 4,
                       width: albumSize,
                       height: albumSize,
+                      transform: [{ scale: albumScaleAnim }, { scale: coverScale }],
+                      opacity: coverFadeAnim,
                     },
-                    { transform: [{ scale: albumScaleAnim }] },
                   ]}
                 >
                   <View style={styles.albumArtShadowRing} />
@@ -685,6 +708,7 @@ export function FullScreenPlayer({
                   <View style={styles.trackInfoActions}>
                     <DownloadButton
                       track={track}
+                      style={{ minWidth: 44, minHeight: 44, justifyContent: 'center', alignItems: 'center' }}
                       iconColor="rgba(255,255,255,0.75)"
                       accentColor={theme.accent}
                       showNotification={showToast}
@@ -826,7 +850,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingTop: 12,
-    paddingBottom: 6,
+    paddingBottom: 8,
     zIndex: 2,
   },
   headerButton: {
@@ -888,21 +912,21 @@ const styles = StyleSheet.create({
     left: -4,
     right: -4,
     bottom: -4,
-    borderRadius: 999,
+    borderRadius: 28,
     backgroundColor: 'transparent',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
-    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 20 },
+    shadowOpacity: 0.5,
+    shadowRadius: 30,
     elevation: 15,
     zIndex: -1,
   },
   albumArtGlass: {
-    borderRadius: 999,
+    borderRadius: 20,
     overflow: 'hidden',
     flex: 1,
   },
-  albumArt: { width: '100%', height: '100%', borderRadius: 999 },
+  albumArt: { width: '100%', height: '100%', borderRadius: 20 },
 
   rightPanel: {
     width: '100%',
@@ -920,12 +944,12 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
     gap: 12,
-    marginBottom: 20,
+    marginBottom: 16,
     paddingHorizontal: 12,
     width: '100%',
   },
   trackInfoLandscape: {
-    marginBottom: 10,
+    marginBottom: 8,
     paddingHorizontal: 4,
   },
   trackInfoText: {
@@ -962,8 +986,8 @@ const styles = StyleSheet.create({
   },
   trackArtistLandscape: { fontSize: 12, lineHeight: 16, minHeight: 16 },
 
-  progressContainer: { marginBottom: 20, width: '100%', paddingHorizontal: 8 },
-  progressContainerLandscape: { marginBottom: 10, paddingHorizontal: 4 },
+  progressContainer: { marginBottom: 16, width: '100%', paddingHorizontal: 12 },
+  progressContainerLandscape: { marginBottom: 8, paddingHorizontal: 4 },
   progressBar: { flexDirection: 'row', alignItems: 'center', gap: 8 },
   timeText: { fontSize: 12, width: 38, textAlign: 'center', fontWeight: '500' },
   sliderContainer: { flex: 1 },
@@ -1004,7 +1028,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     width: '100%',
     paddingHorizontal: 12,
-    marginBottom: 12,
+    marginBottom: 16,
   },
   secondaryButton: {
     width: 44,
